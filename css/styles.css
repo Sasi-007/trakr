@@ -42,7 +42,7 @@ body {
 .app-header { position: sticky; top: 0; background: var(--bg); z-index: 20; padding-top: 10px; }
 .header-row { display: flex; align-items: center; justify-content: space-between; }
 .header-row h1 { font-size: 1.2rem; margin: 6px 0; }
-.header-actions { display: flex; gap: 6px; }
+.header-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 
 .icon-btn, .small-btn, .nav-btn, .ghost-btn, .danger-btn, .primary-btn {
   border: none;
@@ -121,6 +121,59 @@ body {
 .slot-chip.partial { background: rgba(212,160,23,0.22); color: #8a6508; }
 .slot-chip.unpaid { background: rgba(194,105,12,0.2); color: #9a5209; }
 .slot-chip-pinned-bottom { margin-top: auto; }
+
+/* Dates kept aside for special days (e.g. Aadi Kirthigai) — no bookings taken. */
+.day-cell.day-blocked {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--surface-2),
+    var(--surface-2) 6px,
+    var(--surface-3) 6px,
+    var(--surface-3) 12px
+  );
+}
+.day-cell.day-blocked .day-num { color: var(--text); font-weight: 700; }
+.blocked-tag {
+  font-size: 0.6rem;
+  line-height: 1.15;
+  border-radius: 5px;
+  padding: 2px 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 600;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  max-width: 100%;
+}
+.blocked-banner {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+  font-size: 0.85rem;
+}
+.blocked-banner-icon { font-size: 1.2rem; }
+.block-reason-form {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-3);
+}
+.block-reason-form label { display: block; font-size: 0.8rem; color: var(--muted); }
+.block-reason-form input {
+  display: block; width: 100%; margin-top: 4px; padding: 8px;
+  border-radius: 8px; border: 1px solid var(--surface-3);
+  background: var(--surface); color: var(--text); font-size: 0.9rem;
+}
+.block-reason-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
 
 .legend { display: flex; gap: 14px; font-size: 0.78rem; color: var(--muted); margin: 10px 2px; flex-wrap: wrap; }
 .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
@@ -256,9 +309,9 @@ body {
 .field-row { display: flex; gap: 10px; }
 .field-row label { flex: 1; min-width: 0; }
 
-.event-type-field { margin-bottom: 14px; }
+.event-type-field { margin-bottom: 12px; }
 .event-type-field input, .event-type-field select {
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   font-weight: 600;
   border-color: var(--accent);
   background: var(--surface-2);
@@ -367,6 +420,14 @@ body {
   font-size: 0.85rem; z-index: 60;
 }
 .toast.hidden { display: none; }
+
+/* Narrow phones: keep the header actions on one compact row (icons only). */
+@media (max-width: 520px) {
+  .header-actions .btn-label { display: none; }
+  .header-actions .icon-btn { padding: 6px 9px; font-size: 1rem; }
+  .header-actions { flex-wrap: nowrap; }
+  .header-row h1 { font-size: 1.05rem; white-space: nowrap; }
+}
 
 @media (min-width: 640px) {
   .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
