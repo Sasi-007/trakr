@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Event Booking Calendar</title>
+<meta name="theme-color" content="#0f172a" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-row">
+      <h1>📅 Event Calendar</h1>
+      <div class="header-actions">
+        <button id="btnExport" class="icon-btn" title="Export JSON backup">⬇️<span class="btn-label"> Export</span></button>
+        <button id="btnImport" class="icon-btn" title="Import JSON backup">⬆️<span class="btn-label"> Import</span></button>
+        <button id="btnClearAll" class="icon-btn" title="Delete all bookings (export a backup first)">🗑️<span class="btn-label"> Delete</span></button>
+        <input type="file" id="fileImport" accept="application/json" hidden />
+      </div>
+    </div>
+
+    <div class="view-switch">
+      <button class="tab-btn active" data-view="calendar">Calendar</button>
+      <button class="tab-btn" data-view="agenda">Agenda</button>
+      <button class="tab-btn" data-view="dashboard">Summary</button>
+    </div>
+  </header>
+
+  <!-- Dashboard summary -->
+  <section id="view-dashboard" class="view">
+    <div class="summary-grid" id="summaryGrid"></div>
+    <h3 class="section-title" id="upcomingTitle">Upcoming This Month</h3>
+    <div id="upcomingList" class="agenda-list"></div>
+  </section>
+
+  <!-- Calendar view -->
+  <section id="view-calendar" class="view active">
+    <div class="month-nav">
+      <button id="prevMonth" class="nav-btn">‹</button>
+      <h2 id="monthLabel">Month Year</h2>
+      <button id="nextMonth" class="nav-btn">›</button>
+      <button id="todayBtn" class="nav-btn today-btn">Today</button>
+    </div>
+    <div class="weekday-row">
+      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+    </div>
+    <div id="calendarGrid" class="calendar-grid"></div>
+    <div class="legend">
+      <span><i class="dot paid"></i> Fully Paid</span>
+      <span><i class="dot partial"></i> Advance Paid</span>
+      <span><i class="dot unpaid"></i> Unpaid</span>
+    </div>
+  </section>
+
+  <!-- Agenda / list view -->
+  <section id="view-agenda" class="view">
+    <div class="agenda-controls">
+      <input type="search" id="agendaSearch" placeholder="Search by name, phone, bill no, event type..." />
+      <select id="agendaFilter">
+        <option value="all">All</option>
+        <option value="unpaid">Unpaid balance</option>
+        <option value="upcoming">Upcoming only</option>
+        <option value="past">Past only</option>
+      </select>
+    </div>
+    <div class="agenda-date-filter-row">
+      <input type="text" id="agendaDateRange" class="agenda-date-range-input" readonly placeholder="📅 Filter by date / date range..." />
+      <button id="agendaDateClear" class="small-btn hidden" title="Clear date filter">✕</button>
+    </div>
+    <div id="agendaFullList" class="agenda-list"></div>
+  </section>
+
+  <button id="fabAdd" class="fab" title="Add booking">+</button>
+</div>
+
+<!-- Booking modal -->
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">New Booking</h3>
+      <button id="modalClose" class="icon-btn">✕</button>
+    </div>
+    <form id="bookingForm" class="modal-body">
+      <input type="hidden" id="bookingId" />
+
+      <label class="event-type-field">Event Type *
+        <select id="eventType"></select>
+      </label>
+      <label id="customEventTypeWrap" class="event-type-field hidden">New event type name *
+        <input type="text" id="customEventType" placeholder="e.g. Housewarming" />
+      </label>
+
+      <label>Bill No (optional)
+        <input type="text" id="billNo" placeholder="e.g. 1024" />
+      </label>
+
+      <div class="slots-section">
+        <div class="slots-header">
+          <strong>Date(s) &amp; Slot(s) *</strong>
+          <button type="button" id="addSlotRow" class="small-btn">+ Add date</button>
+        </div>
+        <div id="slotRows"></div>
+        <p class="hint">Picking several days at once auto-sets them: first day Evening → middle days Full Day → last day Morning. You can still change any slot.</p>
+      </div>
+
+      <div class="field-row">
+        <label>Total Amount (₹)
+          <input type="number" id="totalAmount" min="0" step="1" value="0" />
+        </label>
+        <label>Advance Paid (₹)
+          <input type="number" id="advanceAmount" min="0" step="1" value="0" />
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label>Advance Paid Date
+          <input type="text" id="advancePaidDate" placeholder="Tap to pick date" readonly />
+        </label>
+        <label class="remaining-label">Remaining Balance
+          <input type="text" id="remainingDisplay" disabled value="₹0" />
+        </label>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="remainingPaid" />
+        Remaining amount fully paid
+      </label>
+      <label>Remaining Paid Date
+        <input type="text" id="remainingPaidDate" placeholder="Tap to pick date" readonly />
+      </label>
+
+      <label>Notes
+        <textarea id="notes" rows="2" placeholder="Any special instructions..."></textarea>
+      </label>
+
+      <details class="customer-details">
+        <summary>Customer details (optional)</summary>
+        <label>Customer Name
+          <input type="text" id="customerName" placeholder="e.g. Ramesh & Priya" />
+        </label>
+        <label>Phone
+          <input type="tel" id="phone" placeholder="10-digit number" />
+        </label>
+      </details>
+
+      <div id="conflictWarning" class="conflict-warning hidden"></div>
+
+      <div class="modal-footer">
+        <button type="button" id="deleteBookingBtn" class="danger-btn hidden">Delete</button>
+        <div class="spacer"></div>
+        <button type="button" id="cancelBtn" class="ghost-btn">Cancel</button>
+        <button type="submit" class="primary-btn">Save Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Day detail modal (quick view from calendar cell) -->
+<div id="dayModalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="dayModalTitle">Day Bookings</h3>
+      <button id="dayModalClose" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body" id="dayModalBody"></div>
+    <div class="modal-footer">
+      <button type="button" id="dayBlockBtn" class="small-btn">🚫 Mark unavailable</button>
+      <div class="spacer"></div>
+      <button type="button" id="dayAddBtn" class="primary-btn">+ Add Booking</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="js/storage.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/datepicker.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
